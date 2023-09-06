@@ -9,10 +9,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNet.WebApi.Core" Version="5.2.9" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Update="WebContent\Errors\404.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

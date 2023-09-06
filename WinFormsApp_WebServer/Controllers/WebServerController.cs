@@ -29,6 +29,7 @@ namespace WinFormsApp_WebServer.Controllers
             Application.Run(new WebServerForm(this));
         }
 
+        // These as event listeners would be better
         public bool StartServer(int port)
         {
             return server.Start(port);

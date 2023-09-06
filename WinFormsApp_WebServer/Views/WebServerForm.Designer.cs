@@ -79,7 +79,6 @@
             tbPort.Location = new Point(152, 36);
             tbPort.MaxLength = 5;
             tbPort.Name = "tbPort";
-            tbPort.PlaceholderText = "23005";
             tbPort.Size = new Size(100, 23);
             tbPort.TabIndex = 4;
             tbPort.KeyPress += tbPort_KeyPress;

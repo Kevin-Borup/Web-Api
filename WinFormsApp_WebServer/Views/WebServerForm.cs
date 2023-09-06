@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -15,23 +17,38 @@ namespace WinFormsApp_WebServer.Views
     internal partial class WebServerForm : Form
     {
         IWebController controller;
+        string defaultPortNr = "23005";
         public WebServerForm(IWebController webController)
         {
             this.controller = webController;
 
             InitializeComponent();
             btnStop.Enabled = false;
+            tbPort.PlaceholderText = defaultPortNr;
         }
 
         private void btnStart_Click(object sender, EventArgs e)
         {
-            if (!string.IsNullOrWhiteSpace(tbPort.Text) && tbPort.Text.All(c => char.IsDigit(c)) && tbPort.Text.Length < 6)
+            if (string.IsNullOrWhiteSpace(tbPort.Text)) tbPort.Text = defaultPortNr;
+
+            if (tbPort.Text.All(c => char.IsDigit(c)) && tbPort.Text.Length < 6)
             {
                 int port = Convert.ToInt32(tbPort.Text);
+
+                // max size of 16-bit integer, the number of ports
+                if (port > 65535)
+                {
+                    port = 65535;
+                }
+
+                tbPort.Text = port.ToString();
+
+
                 if (controller.StartServer(port))
                 {
                     btnStart.Enabled = false;
                     btnStop.Enabled = true;
+                    Process.Start(new ProcessStartInfo("http://localhost:" + port) { UseShellExecute = true });
                 }
             }
         }
