@@ -1,0 +1,6 @@
+{
+  "Jwt": {
+    "Issuer": "https://localhost:32775",
+    "Audience": "https://localhost:32775"
+  }
+}
