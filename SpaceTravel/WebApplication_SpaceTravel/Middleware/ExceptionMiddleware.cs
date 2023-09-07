@@ -5,20 +5,13 @@ using WebApplication_SpaceTravel.Exceptions;
 
 namespace WebApplication_SpaceTravel.Middleware
 {
-    public class ExceptionMiddleware
+    public class ExceptionMiddleware : IMiddleware
     {
-        private readonly RequestDelegate _next;
-
-        public ExceptionMiddleware(RequestDelegate next)
-        {
-            _next = next;
-        }
-
-        public async Task InvokeAsync(HttpContext httpContext)
+        public async Task InvokeAsync(HttpContext httpContext, RequestDelegate next)
         {
             try
             {
-                await _next(httpContext);
+                await next(httpContext);
             }
             catch (TitleException tEx)
             {

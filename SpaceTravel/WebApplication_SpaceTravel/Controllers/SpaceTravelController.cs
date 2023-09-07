@@ -21,7 +21,13 @@ namespace WebApplication_SpaceTravel.Controllers
             this._dataHandler = dataHandler;
         }
 
-        //Validated by middleware
+        /// <summary>
+        /// Returns the Galactic Routes, 
+        /// Cadets are limited to routes that finish within the year.
+        /// Captains can see all routes.
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="HttpException"></exception>
         [HttpGet("GetRoutes")]
         public async Task<IEnumerable<GalacticRoute>> GetGalacticRoutes()
         {

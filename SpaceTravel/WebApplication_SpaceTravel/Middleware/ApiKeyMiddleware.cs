@@ -13,56 +13,63 @@ namespace WebApplication_SpaceTravel.Middleware
         private readonly RequestDelegate _next;
         private const string APIKEY = "XApiKey";
         private const string APIKEYIDENTIFIERSALT = "XApiIdentifierSalt";
-        private readonly IEncryptionService _encryptor;
+        private readonly IEncryptionService _encryption;
         private readonly IDataHandler _dataHandler;
 
         public ApiKeyMiddleware(RequestDelegate next, IEncryptionService encryption, IDataHandler dataHandler)
         {
             _dataHandler = dataHandler;
-            _encryptor = encryption;
+            _encryption = encryption;
             _next = next;
         }
         public async Task InvokeAsync(HttpContext context)
         {
             if (context.Session.IsAvailable) { context.Session.SetString("SessionTitle", ""); }
 
-            if (context.Request.GetEncodedUrl().ToLower().Contains("api/Authentication/GenerateKey"))
+            // If the request is targeting the generatekey api, let them pass.
+            if (context.Request.Path.Equals("/api/Authentication/GenerateKey"))
             {
                 await _next(context);
                 return;
             }
 
+            //Whether an apikey header can be found
             if (!context.Request.Headers.TryGetValue(APIKEY, out var ApiFullKey)) throw new HttpException(HttpStatusCode.BadRequest);
 
+            //Gets the locally saved identifier salt from appsettings.json
             var appSettings = context.RequestServices.GetRequiredService<IConfiguration>();
             var apiIdentifierSalt = appSettings.GetValue<string>(APIKEYIDENTIFIERSALT);
 
-            var key = ApiFullKey[0].Split(".");
+            var key = ApiFullKey[0].Split("."); //Split identifier from key at .
             var ApiIdentifier = key[0];
             var ApiKey = key[1];
 
-            string hashedIden = _encryptor.HashIdentifier(ApiIdentifier, apiIdentifierSalt);
+            // Hash the identifier with the local salt. To create a comparable value with the one stored on the DB
+            string hashedIden = _encryption.HashIdentifier(ApiIdentifier, apiIdentifierSalt);
 
-            RouteKey? routeKey = await _dataHandler.GetKeyIfIdentifierExists(hashedIden);
+            RouteKey? routeKey = await _dataHandler.GetKeyIfIdentifierExists(hashedIden); // Compare the hashed identifier to all keys.
 
-            if (routeKey != null && _encryptor.CheckKey(ApiKey, routeKey.Key, routeKey.KeySalt))
+            // if a key is found, and the inputtet key also match the one on the object, then the api key is valid.
+            if (routeKey != null && _encryption.CheckKey(ApiKey, routeKey.Key, routeKey.KeySalt))
             {
-                if (routeKey.Title.Equals("Cadet") && (routeKey.FirstQuery - DateTime.Now).TotalMinutes > 30)
+                //If the key is of cadet, then check if the firstquery time was over 30 min ago, if so, set the time to now, and reset the counter.
+                if (routeKey.Title.Equals("Cadet") && (DateTime.Now.ToUniversalTime() - routeKey.FirstQuery).TotalMinutes > 30)
                 {
-                    routeKey.FirstQuery = DateTime.Now;
+                    routeKey.FirstQuery = DateTime.Now.ToUniversalTime();
                     routeKey.QueryCount = 0;
                 }
 
-                routeKey.QueryCount++;
-
+                routeKey.QueryCount++; // used to log behavior of cadets and captains. Only cadets are limited by this.
+                 
                 await _dataHandler.UpdateKeyQueryData(routeKey);
 
+                // if the key is of a cadet type, and the querycounter is on 5 or above, block access.
                 if (routeKey.Title.Equals("Cadet") && routeKey.QueryCount >= 5) throw new HttpException(HttpStatusCode.TooManyRequests);
 
 
                 if (context.Session.IsAvailable)
                 {
-                    context.Session.SetString("SessionTitle", routeKey.Title);
+                    context.Session.SetString("SessionTitle", routeKey.Title); //Save the title here
                     await _next(context);
                 }
             }

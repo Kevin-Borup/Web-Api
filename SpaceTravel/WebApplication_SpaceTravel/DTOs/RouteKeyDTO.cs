@@ -2,6 +2,7 @@
 
 namespace WebApplication_SpaceTravel.DTOs
 {
+    // A DTO object to guarantee we only send data we should.
     public class RouteKeyDTO
     {
         public string Identifier { get; set; }
@@ -12,10 +13,10 @@ namespace WebApplication_SpaceTravel.DTOs
             return $"{Identifier}.{Key}";
         }
 
-        public RouteKeyDTO(RouteKey routeKey)
+        public RouteKeyDTO(string identifier, string key)
         {
-            Identifier = routeKey.Identifier;
-            Key = routeKey.Key;
+            Identifier = identifier;
+            Key = key;
         }
     }
 }

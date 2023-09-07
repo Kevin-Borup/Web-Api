@@ -14,35 +14,50 @@ namespace WebApplication_SpaceTravel.Services
         private int byteLength = 32;
         private int encryptionIterations = 5000;
 
-        public string GenerateIdentifier(string title)
+        /// <summary>
+        /// Generate an identifier, as prefix to the api key.
+        /// </summary>
+        /// <returns></returns>
+        public string GenerateIdentifier()
         {
-            return Convert.ToBase64String(GenerateUniqueIdentifier(title));
+            return Convert.ToBase64String(GenerateUniqueBytes());
         }
 
         /// <summary>
-        /// Encrypts the password with SHA512 and salt, returns the new pass and used salt.
+        /// Encrypts the password with SHA512 and salt, a RouteKey object and the pure api key.
         /// </summary>
         /// <param name="password"></param>
         /// <param name="pass"></param>
         /// <param name="salt"></param>
-        public RouteKey GenerateKey(string identifier)
+        public RouteKey GenerateKey(string identifier, string identifierSalt, out string apiKey)
         {
 
-            var keyPass = GenerateUniqueKey();
+            var identifierBytes = Encoding.UTF8.GetBytes(identifier);
+            var identifierSaltBytes = Encoding.UTF8.GetBytes(identifierSalt);
+            var idenHash = HashBytes(identifierBytes, identifierSaltBytes, encryptionIterations);
+
+            var apiKeyBytes = GenerateUniqueBytes();
             var keySalt = GenerateSalt();
-            var keyHash = HashBytes(keyPass, keySalt, encryptionIterations);
+            var keyHash = HashBytes(apiKeyBytes, keySalt, encryptionIterations);
 
             RouteKey routeKey = new RouteKey()
             {
-                Identifier = identifier,
+                Identifier = Convert.ToBase64String(idenHash),
                 Key = Convert.ToBase64String(keyHash),
                 KeySalt = Convert.ToBase64String(keySalt),
                 FirstQuery = DateTime.Now,
                 QueryCount = 0,
             };
 
+            apiKey = Convert.ToBase64String(apiKeyBytes);
+
             return routeKey;
         }
+
+        /// <summary>
+        /// Generate a random salt, used to randomize the algorithm further.
+        /// </summary>
+        /// <returns></returns>
         private byte[] GenerateSalt()
         {
             var randomNumberGenerator = RandomNumberGenerator.Create();
@@ -52,29 +67,13 @@ namespace WebApplication_SpaceTravel.Services
             return randomBytes;
         }
 
-        private byte[] GenerateUniqueIdentifier(string title)
+        /// <summary>
+        /// Generate a random assortment of bytes, using the alphanumerical alphabet, and a salt.
+        /// </summary>
+        /// <returns></returns>
+        private byte[] GenerateUniqueBytes()
         {
-            if (title.Equals("Captain"))
-            {
-                return GenerateUniqueBytes("ScTa4Cad");
-            }
-            else if (title.Equals("Cadet"))
-            {
-                return GenerateUniqueBytes("ScTa4Cpt");
-            }
-            else
-            {
-                throw new TitleException(title);
-            }
-        }
-
-        private byte[] GenerateUniqueKey()
-        {
-            return GenerateUniqueBytes();
-        }
-
-        private byte[] GenerateUniqueBytes(string charValues = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")
-        {
+            string charValues = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
             char[] chars = charValues.ToCharArray();
             byte[] data = GenerateSalt();
             StringBuilder result = new StringBuilder(byteLength);
@@ -85,6 +84,13 @@ namespace WebApplication_SpaceTravel.Services
             return Encoding.UTF8.GetBytes(result.ToString());
         }
 
+        /// <summary>
+        /// Hashing algorithm, that uses SHA512, and specified iterations.
+        /// </summary>
+        /// <param name="toBeHashed"></param>
+        /// <param name="salt"></param>
+        /// <param name="numberOfRounds"></param>
+        /// <returns></returns>
         private byte[] HashBytes(byte[] toBeHashed, byte[] salt, int numberOfRounds)
         {
             // Rfc2898DeriveBytes salts the byte password, followed by hashing it the defined amount of times, with the selected SHA512
@@ -94,6 +100,12 @@ namespace WebApplication_SpaceTravel.Services
             }
         }
 
+        /// <summary>
+        /// Hash the identifier with the received salt.
+        /// </summary>
+        /// <param name="identifier"></param>
+        /// <param name="identifierSalt"></param>
+        /// <returns></returns>
         public string HashIdentifier(string identifier, string identifierSalt)
         {
             return Convert.ToBase64String(HashBytes(Encoding.UTF8.GetBytes(identifier), Encoding.UTF8.GetBytes(identifierSalt), encryptionIterations));
@@ -110,24 +122,34 @@ namespace WebApplication_SpaceTravel.Services
         {
             bool equal = false;
 
-            byte[] key = Encoding.UTF8.GetBytes(storedKey);
+            byte[] key = Convert.FromBase64String(storedKey);
+            byte[] salt = Convert.FromBase64String(storedKeySalt);
+            byte[] userKey = Convert.FromBase64String(apiKey);
 
             // Hash the input to compare with the one on the database.
-            byte[] newPass = HashBytes(Encoding.UTF8.GetBytes(apiKey), Encoding.UTF8.GetBytes(storedKeySalt), encryptionIterations);
+            byte[] newKey = HashBytes(userKey, salt, encryptionIterations);
+            string test = Convert.ToBase64String(newKey);
 
-            if (key.Length == newPass.Length)
+            if (key.Length == newKey.Length)
             {
                 // If they are same length, and each element of the byte array is equal, then it's the same hash.
-                equal = CompareByteArrays(key, newPass, newPass.Length);
+                equal = CompareByteArrays(key, newKey, newKey.Length);
             }
 
             return equal;
         }
 
+        /// <summary>
+        /// Campares the two byte arrays, to see if each element is identical
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <param name="len"></param>
+        /// <returns></returns>
         private bool CompareByteArrays(byte[] a, byte[] b, int len)
         {
             for (int i = 0; i < len; i++)
-                if (a[i] != b[i]) return false;
+                if (!a[i].Equals(b[i])) return false;
             return true;
         }
     }

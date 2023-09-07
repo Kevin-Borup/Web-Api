@@ -8,7 +8,7 @@ namespace WebApplication_SpaceTravel.DataHandlers
     {
         public MongoDataHandler()
         {
-            DB.InitAsync("ScrumBoard", "localhost", 32768);
+            DB.InitAsync("SpaceTravel", "localhost", 32768);
         }
 
         public async Task<IEnumerable<GalacticRoute>> GetAll()
@@ -16,9 +16,13 @@ namespace WebApplication_SpaceTravel.DataHandlers
             return await DB.Find<GalacticRoute>().ManyAsync(_ => true);
         }
 
+        /// <summary>
+        /// Get all routes that finish within a year
+        /// </summary>
+        /// <returns></returns>
         public async Task<IEnumerable<GalacticRoute>> GetWithinYear()
         {
-            return await DB.Find<GalacticRoute>().ManyAsync(q => !q.Duration.ToLower().Contains("year"));
+            return await DB.Find<GalacticRoute>().ManyAsync(q => !q.Duration.ToLower().Contains("år"));
         }
 
         public async Task InsertRouteKey(RouteKey key)
@@ -28,13 +32,21 @@ namespace WebApplication_SpaceTravel.DataHandlers
 
         public async Task UpdateKeyQueryData(RouteKey key)
         {
-            DB.Update<RouteKey>().MatchID(key.ID).ModifyWith(key);
+            await DB.Update<RouteKey>().MatchID(key.ID).ModifyWith(key).ExecuteAsync();
         }
 
+        /// <summary>
+        /// Gets the first key that has the same identifier.
+        /// </summary>
+        /// <param name="identifier"></param>
+        /// <returns></returns>
         public async Task<RouteKey?> GetKeyIfIdentifierExists(string identifier)
         {
             var matchingKey = await DB.Find<RouteKey>().ManyAsync(q => q.Identifier.Equals(identifier));
-            var routeKey = matchingKey.FirstOrDefault();
+            if (matchingKey == null) return null;
+            if (matchingKey.Count() == 0) return null;
+
+            var routeKey = matchingKey.First();
             return routeKey;
         }
     }
