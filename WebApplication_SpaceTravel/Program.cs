@@ -1,4 +1,6 @@
 
+using WebApplication_SpaceTravel.Middleware;
+
 namespace WebApplication_SpaceTravel
 {
     public class Program
@@ -22,9 +24,10 @@ namespace WebApplication_SpaceTravel
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+            app.UseMiddleware<ApiKeyMiddleware>();
 
-            var test1 = int.Parse("3 dage");
-
+            app.UseExceptionHandler("api/error");
+            app.UseMiddleware<ExceptionMiddleware>();
 
             app.UseHttpsRedirection();
 

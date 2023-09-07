@@ -18,31 +18,19 @@ namespace WebApplication_SpaceTravel.DataHandlers
 
         public async Task<IEnumerable<GalacticRoute>> GetWithinYear()
         {
-            var routesWithinYear = new List<GalacticRoute>();
+            return await DB.Find<GalacticRoute>().ManyAsync(q => !q.Duration.ToLower().Contains("year"));
+        }
 
-            var allRoutes = await DB.Find<GalacticRoute>().ManyAsync(_ => true);
-            
-            var routeDurations = new List<TimeSpan>();
-            foreach (var route in allRoutes)
-            {
-                string duration = route.Duration.ToLower();
-                if (duration.Contains("dag") || duration.Contains("dage"))
-                {
-                    if (int.TryParse(duration, out int days)) routeDurations.Add(TimeSpan.FromDays(days));
-                }
-                else if (duration.Contains("month") || duration.Contains("months"))
-                {
-                    if (int.TryParse(duration, out int months)) routeDurations.Add(TimeSpan.FromDays(months * 30.44)); // average length of months in gregorian, with leap years accounted for
+        public async Task<RouteKey?> GetKeyIfIdentifierExists(string identifier)
+        {
+            var matchingKey = await DB.Find<RouteKey>().ManyAsync(q => q.Identifier.Equals(identifier));
+            var routeKey = matchingKey.FirstOrDefault();
+            return routeKey;
+        }
 
-                }
-                else if(duration.Contains("year") || duration.Contains("years"))
-                {
-                    if (int.TryParse(duration, out int years)) routeDurations.Add(TimeSpan.FromDays(years * 365.2425)); //.25 to account for leap years
-                }
-            }
-
-
-            return routesWithinYear;
+        public async Task UpdateKeyQueryData(RouteKey key)
+        {
+           DB.Update<RouteKey>().MatchID(key.ID).ModifyWith(key);
         }
 
     }
