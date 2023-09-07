@@ -4,6 +4,7 @@ using WebApplication_SpaceTravel.Models;
 using WebApplication_SpaceTravel.DataHandlers;
 using Microsoft.AspNetCore.Http.Extensions;
 using ZstdSharp;
+using WebApplication_SpaceTravel.Interfaces;
 
 namespace WebApplication_SpaceTravel.Middleware
 {
@@ -12,13 +13,13 @@ namespace WebApplication_SpaceTravel.Middleware
         private readonly RequestDelegate _next;
         private const string APIKEY = "XApiKey";
         private const string APIKEYIDENTIFIERSALT = "XApiIdentifierSalt";
-        private readonly Encryptor _encryptor;
-        private readonly MongoDataHandler _dataHandler;
+        private readonly IEncryptionService _encryptor;
+        private readonly IDataHandler _dataHandler;
 
-        public ApiKeyMiddleware(RequestDelegate next)
+        public ApiKeyMiddleware(RequestDelegate next, IEncryptionService encryption, IDataHandler dataHandler)
         {
-            _dataHandler = new MongoDataHandler();
-            _encryptor = new Encryptor();
+            _dataHandler = dataHandler;
+            _encryptor = encryption;
             _next = next;
         }
         public async Task InvokeAsync(HttpContext context)

@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using WebApplication_SpaceTravel.DataHandlers;
 using WebApplication_SpaceTravel.Exceptions;
+using System.Net;
 using WebApplication_SpaceTravel.Models;
+using WebApplication_SpaceTravel.Interfaces;
 
 namespace WebApplication_SpaceTravel.Controllers
 {
@@ -12,9 +14,9 @@ namespace WebApplication_SpaceTravel.Controllers
     [ApiController]
     public class SpaceTravelController : ControllerBase
     {
-        private readonly MongoDataHandler _dataHandler;
+        private readonly IDataHandler _dataHandler;
 
-        public SpaceTravelController(MongoDataHandler dataHandler)
+        public SpaceTravelController(IDataHandler dataHandler)
         {
             this._dataHandler = dataHandler;
         }
@@ -23,13 +25,11 @@ namespace WebApplication_SpaceTravel.Controllers
         [HttpGet("GetRoutes")]
         public async Task<IEnumerable<GalacticRoute>> GetGalacticRoutes()
         {
-            var returnValue = new List<GalacticRoute>();
-
             if (HttpContext.Session.IsAvailable)
             {
                 string? title = HttpContext.Session.GetString("SessionTitle");
 
-                if (title == null) return returnValue;
+                if (title == null) throw new HttpException(HttpStatusCode.InternalServerError);
 
                 if (title == "Captain")
                 {
@@ -40,7 +40,7 @@ namespace WebApplication_SpaceTravel.Controllers
                 }
             }
 
-            return returnValue;
+            throw new HttpException(HttpStatusCode.InternalServerError);
         }
 
     }

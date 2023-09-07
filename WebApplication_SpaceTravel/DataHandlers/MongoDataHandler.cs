@@ -4,7 +4,7 @@ using WebApplication_SpaceTravel.Models;
 
 namespace WebApplication_SpaceTravel.DataHandlers
 {
-    public class MongoDataHandler : IDataHandlers
+    public class MongoDataHandler : IDataHandler
     {
         public MongoDataHandler()
         {
@@ -21,17 +21,21 @@ namespace WebApplication_SpaceTravel.DataHandlers
             return await DB.Find<GalacticRoute>().ManyAsync(q => !q.Duration.ToLower().Contains("year"));
         }
 
+        public async Task InsertRouteKey(RouteKey key)
+        {
+            await DB.InsertAsync<RouteKey>(key);
+        }
+
+        public async Task UpdateKeyQueryData(RouteKey key)
+        {
+            DB.Update<RouteKey>().MatchID(key.ID).ModifyWith(key);
+        }
+
         public async Task<RouteKey?> GetKeyIfIdentifierExists(string identifier)
         {
             var matchingKey = await DB.Find<RouteKey>().ManyAsync(q => q.Identifier.Equals(identifier));
             var routeKey = matchingKey.FirstOrDefault();
             return routeKey;
         }
-
-        public async Task UpdateKeyQueryData(RouteKey key)
-        {
-           DB.Update<RouteKey>().MatchID(key.ID).ModifyWith(key);
-        }
-
     }
 }

@@ -53,12 +53,16 @@ namespace WebApplication_SpaceTravel.Middleware
             switch (hEx.StatusCode)
             {
                 case HttpStatusCode.BadRequest:
+                    message = "Bad Request, missing api key to grant access";
                     break;
                 case HttpStatusCode.Unauthorized:
-                    break;
-                case HttpStatusCode.Forbidden:
+                    message = "Unauthorized, key doesn't grant access";
                     break;
                 case HttpStatusCode.TooManyRequests:
+                    message = "Cadets are limited to 5 request per half hour. You have exceeded this. Request denied.";
+                    break;
+                case HttpStatusCode.InternalServerError:
+                    message = "An internal server error occured.";
                     break;
                 default:
                     break;

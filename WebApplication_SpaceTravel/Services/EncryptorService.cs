@@ -4,13 +4,20 @@ using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
 using WebApplication_SpaceTravel.Exceptions;
+using WebApplication_SpaceTravel.Interfaces;
+using WebApplication_SpaceTravel.Models;
 
-namespace WebApplication_SpaceTravel.Models
+namespace WebApplication_SpaceTravel.Services
 {
-    public class Encryptor
+    public class EncryptorService : IEncryptionService
     {
         private int byteLength = 32;
         private int encryptionIterations = 5000;
+
+        public string GenerateIdentifier(string title)
+        {
+            return Convert.ToBase64String(GenerateUniqueIdentifier(title));
+        }
 
         /// <summary>
         /// Encrypts the password with SHA512 and salt, returns the new pass and used salt.
@@ -18,19 +25,21 @@ namespace WebApplication_SpaceTravel.Models
         /// <param name="password"></param>
         /// <param name="pass"></param>
         /// <param name="salt"></param>
-        public RouteKey GenerateKey(string title)
+        public RouteKey GenerateKey(string identifier)
         {
-            RouteKey routeKey = new RouteKey();
-
-
-            var idenTitle = GenerateUniqueIdentifier(title);
 
             var keyPass = GenerateUniqueKey();
             var keySalt = GenerateSalt();
             var keyHash = HashBytes(keyPass, keySalt, encryptionIterations);
 
-            routeKey.Identifier = Convert.ToBase64String(idenTitle);
-            routeKey.Key = Convert.ToBase64String(keyPass);
+            RouteKey routeKey = new RouteKey()
+            {
+                Identifier = identifier,
+                Key = Convert.ToBase64String(keyHash),
+                KeySalt = Convert.ToBase64String(keySalt),
+                FirstQuery = DateTime.Now,
+                QueryCount = 0,
+            };
 
             return routeKey;
         }
@@ -64,14 +73,14 @@ namespace WebApplication_SpaceTravel.Models
             return GenerateUniqueBytes();
         }
 
-        private byte[] GenerateUniqueBytes(string charValues = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890") 
+        private byte[] GenerateUniqueBytes(string charValues = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")
         {
             char[] chars = charValues.ToCharArray();
             byte[] data = GenerateSalt();
             StringBuilder result = new StringBuilder(byteLength);
             foreach (byte b in data)
             {
-                result.Append(chars[b % (chars.Length)]);
+                result.Append(chars[b % chars.Length]);
             }
             return Encoding.UTF8.GetBytes(result.ToString());
         }
@@ -85,9 +94,9 @@ namespace WebApplication_SpaceTravel.Models
             }
         }
 
-        public string HashIdentifier(string identifer, string identifierSalt)
+        public string HashIdentifier(string identifier, string identifierSalt)
         {
-            return Convert.ToBase64String(HashBytes(Encoding.UTF8.GetBytes(identifer), Encoding.UTF8.GetBytes(identifierSalt), encryptionIterations));
+            return Convert.ToBase64String(HashBytes(Encoding.UTF8.GetBytes(identifier), Encoding.UTF8.GetBytes(identifierSalt), encryptionIterations));
         }
 
         /// <summary>
@@ -95,16 +104,16 @@ namespace WebApplication_SpaceTravel.Models
         /// </summary>
         /// <param name="apiKey"></param>
         /// <param name="storedKey"></param>
-        /// <param name="storedSalt"></param>
+        /// <param name="storedKeySalt"></param>
         /// <returns></returns>
-        public bool CheckKey(string apiKey, string storedKey, string storedSalt)
+        public bool CheckKey(string apiKey, string storedKey, string storedKeySalt)
         {
             bool equal = false;
 
             byte[] key = Encoding.UTF8.GetBytes(storedKey);
 
             // Hash the input to compare with the one on the database.
-            byte[] newPass = HashBytes(Encoding.UTF8.GetBytes(apiKey), Encoding.UTF8.GetBytes(storedSalt), encryptionIterations);
+            byte[] newPass = HashBytes(Encoding.UTF8.GetBytes(apiKey), Encoding.UTF8.GetBytes(storedKeySalt), encryptionIterations);
 
             if (key.Length == newPass.Length)
             {

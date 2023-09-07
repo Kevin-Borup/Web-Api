@@ -16,6 +16,13 @@ namespace WebApplication_SpaceTravel
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+            builder.Services.AddSession(options =>
+            {
+                options.Cookie.HttpOnly = true;
+                options.Cookie.IsEssential = true;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+            });
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -25,8 +32,6 @@ namespace WebApplication_SpaceTravel
                 app.UseSwaggerUI();
             }
             app.UseMiddleware<ApiKeyMiddleware>();
-
-            app.UseExceptionHandler("api/error");
             app.UseMiddleware<ExceptionMiddleware>();
 
             app.UseHttpsRedirection();
