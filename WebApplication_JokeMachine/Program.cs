@@ -1,10 +1,5 @@
 
-//using WebApplication_Dragons.Middleware;
-
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using WebApplication_Dragons.Extensions;
-
-namespace WebApplication_Dragons
+namespace WebApplication_JokeMachine
 {
     public class Program
     {
@@ -18,9 +13,19 @@ namespace WebApplication_Dragons
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
-            builder.ConfigureAuthentication();
+
+            builder.Services.AddDistributedMemoryCache();
+            builder.Services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromMinutes(5);
+                options.Cookie.HttpOnly = true;
+                options.Cookie.IsEssential = true;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+            });
 
             var app = builder.Build();
+
+            app.UseSession();
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
@@ -32,10 +37,7 @@ namespace WebApplication_Dragons
             app.UseHttpsRedirection();
 
             app.UseAuthorization();
-            app.UseAuthentication();
 
-            // Add configuration from jwt.json
-            builder.Configuration.AddJsonFile("jwt.json", optional: false, reloadOnChange: true).AddEnvironmentVariables();
 
             app.MapControllers();
 

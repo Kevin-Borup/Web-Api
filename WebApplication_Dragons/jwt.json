@@ -1,7 +1,7 @@
 {
   "Jwt": {
-    "Issuer": "https://localhost:32775",
-    "Audience": "https://localhost:32775",
+    "Issuer": "https://localhost:7008",
+    "Audience": "https://localhost:7008",
     "Key": "9ETVQM9yEkl9xvjLvTHe9AdWHG2scL2KX4h15m5HJRr9hj99vtSthAGXo37kNL+L0tNdYrXXzbdw+jFXbaalJq6Ewainxq0u+dBaHUQx9m3CmJUFOUAXFR09XRHxRQZNz69pIIBAlCz3x34MUv/94TzCDFLb2/CvmZofVwVj8rvkNDY63D9JC6L/ce39qWcH"
   }
 }

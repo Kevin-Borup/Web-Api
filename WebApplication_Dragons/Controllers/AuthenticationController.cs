@@ -30,7 +30,7 @@ namespace WebApplication_Dragons.Controllers
 
         [AllowAnonymous] // Not neccesarry, but an explicit definition
         [HttpPost("NewDragon")]
-        public async Task CreateNewDragon(AccountDTO newUser, string role)
+        public async Task CreateNewDragon([FromQuery] AccountDTO newUser, [FromQuery] string role)
         {
             if (newUser == null) throw new HttpRequestException("No user parameters", null, HttpStatusCode.BadRequest);
             if (newUser.Username == null) throw new HttpRequestException("No user parameters", null, HttpStatusCode.BadRequest);
@@ -52,7 +52,7 @@ namespace WebApplication_Dragons.Controllers
 
         [AllowAnonymous] // Not neccesarry, but an explicit definition
         [HttpGet("Login")]
-        public async Task<IActionResult> LoginDragon(AccountDTO login)
+        public async Task<IActionResult> LoginDragon([FromQuery] AccountDTO login)
         {
             if (login == null) return Unauthorized();
             if (login.Username == null) return Unauthorized();
