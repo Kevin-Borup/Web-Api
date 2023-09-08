@@ -8,6 +8,7 @@ namespace WebApplication_Dragons.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class TuneController : ControllerBase
     {
         MongoDataHandler _dataHandler;

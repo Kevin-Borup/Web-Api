@@ -1,4 +1,9 @@
 
+//using WebApplication_Dragons.Middleware;
+
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using WebApplication_Dragons.Extensions;
+
 namespace WebApplication_Dragons
 {
     public class Program
@@ -13,6 +18,7 @@ namespace WebApplication_Dragons
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+            builder.ConfigureAuthentication();
 
             var app = builder.Build();
 

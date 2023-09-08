@@ -5,8 +5,11 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Net;
 using WebApplication_Dragons.DataHandlers;
+using WebApplication_Dragons.DTOs;
 using WebApplication_Dragons.Models;
+using WebApplication_Dragons.Services;
 
 namespace WebApplication_Dragons.Controllers
 {
@@ -15,35 +18,52 @@ namespace WebApplication_Dragons.Controllers
     public class AuthenticationController : ControllerBase
     {
         MongoDataHandler _dataHandler;
+        Encryptor _encryptor;
         IConfiguration _config;
 
         public AuthenticationController(IConfiguration configuration)
         {
             _dataHandler = new MongoDataHandler();
+            _encryptor = new Encryptor();
             this._config = configuration;
         }
 
         [AllowAnonymous] // Not neccesarry, but an explicit definition
         [HttpPost("NewDragon")]
-        public async Task CreateNewDragon(Account newUser)
+        public async Task CreateNewDragon(AccountDTO newUser, string role)
         {
-            if (newUser == null) throw new HttpRequestException("No user parameters", null, System.Net.HttpStatusCode.BadRequest);
-            if (newUser.Username == null) throw new HttpRequestException("No user parameters", null, System.Net.HttpStatusCode.BadRequest);
-            if (newUser.Password == null) throw new HttpRequestException("No user parameters", null, System.Net.HttpStatusCode.BadRequest);
+            if (newUser == null) throw new HttpRequestException("No user parameters", null, HttpStatusCode.BadRequest);
+            if (newUser.Username == null) throw new HttpRequestException("No user parameters", null, HttpStatusCode.BadRequest);
+            if (newUser.Password == null) throw new HttpRequestException("No pass parameters", null, HttpStatusCode.BadRequest);
+            if (role == null) throw new HttpRequestException("No role parameters", null, HttpStatusCode.BadRequest);
 
+            if (await _dataHandler.IsUsernameUsed(newUser.Username)) throw new HttpRequestException("Name is already in use", null, HttpStatusCode.Conflict);
+
+            _encryptor.EncryptPassword(newUser.Password, out byte[] hashedPass, out byte[] passSalt);
+
+            await _dataHandler.CreateNewUser(new Account()
+            {
+                Username = newUser.Username,
+                Password = Convert.ToBase64String(hashedPass),
+                PassSalt = Convert.ToBase64String(passSalt),
+                AccountRoles = new string[] { role }
+            });
         }
 
         [AllowAnonymous] // Not neccesarry, but an explicit definition
         [HttpGet("Login")]
-        public async Task<IActionResult> LoginDragon(Account login)
+        public async Task<IActionResult> LoginDragon(AccountDTO login)
         {
             if (login == null) return Unauthorized();
+            if (login.Username == null) return Unauthorized();
+            if (login.Password == null) return Unauthorized();
 
             Account? user = await _dataHandler.GetUser(login.Username);
 
             if (user == null) return Unauthorized();
 
-            if (!login.Equals(user.Password)) return Unauthorized();
+            
+            if (!_encryptor.CheckPassword(login.Password, Convert.FromBase64String(user.Password), Convert.FromBase64String(user.PassSalt))) return Unauthorized();
 
             var issuer = _config["Jwt:Issuer"];
             var audience = _config["Jwt:Audience"];
