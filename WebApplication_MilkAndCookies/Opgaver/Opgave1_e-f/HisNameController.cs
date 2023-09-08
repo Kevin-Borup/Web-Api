@@ -10,9 +10,9 @@ namespace WebApplication_MilkAndCookies.Controllers.Opgave1_e_f
         [HttpGet]
         public string GetHisName()
         {
-            string? favoriteMilkshake = Request.Cookies["name"];
+            string? name = Request.Cookies["name"];
 
-            return favoriteMilkshake ?? "";
+            return name ?? "";
         }
     }
 }

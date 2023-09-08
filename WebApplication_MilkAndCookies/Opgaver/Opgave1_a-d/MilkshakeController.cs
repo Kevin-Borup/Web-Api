@@ -22,7 +22,7 @@ namespace WebApplication_MilkAndCookies.Controllers
         {
             string? favoriteMilkshake = Request.Cookies["favoriteMilkshake"];
 
-            return favoriteMilkshake ?? "";
+            return favoriteMilkshake ?? throw new HttpRequestException("Favorite milkshake not found", null, System.Net.HttpStatusCode.NotFound);
         }
     }
 }

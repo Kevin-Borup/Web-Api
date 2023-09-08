@@ -16,18 +16,18 @@ namespace WebApplication_Dragons.Controllers
             _dataHandler = new MongoDataHandler();
         }
 
-        [Authorize]
+        [Authorize(Roles = "Listener, Creator")]
         [HttpGet("DragonTunes")]
         public async Task<IEnumerable<Tune>> GetAllTunes()
         {
-            _dataHandler.
+            return await _dataHandler.GetAllTunes();
         }
 
-        [Authorize]
+        [Authorize(Roles = "Creator")]
         [HttpPost("NewDragonTune")]
-        public async Task PostTune()
+        public async Task PostTune(Tune tune)
         {
-
+            await _dataHandler.InsertNewTune(tune);
         }
     }
 }
