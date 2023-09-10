@@ -10,7 +10,7 @@ using WebApplication_JokeMachine.Models;
 
 namespace WebApplication_JokeMachine.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("/")]
     [ApiController]
     public class JokeController : ControllerBase
     {
@@ -21,7 +21,7 @@ namespace WebApplication_JokeMachine.Controllers
             _dataHandler = new LocalDataHandler();
         }
 
-        [HttpGet]
+        [HttpGet("GetJoke")]
         public async Task<JokeDTO> GetJoke([FromQuery] string category = "")
         {
             string? lang = Request.Headers.ContentLanguage;

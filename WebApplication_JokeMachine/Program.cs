@@ -19,6 +19,15 @@ namespace WebApplication_JokeMachine
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+            builder.Services.ConfigureSwaggerGen(setup =>
+            {
+                setup.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+                {
+                    Title = "Joke Machine",
+                    Version = "v1"
+                });
+            });
+
             builder.Services.AddTransient<IEncryptionService, EncryptorService>();
             builder.Services.AddSingleton<IDataHandler>(new LocalDataHandler());
 
@@ -36,11 +45,18 @@ namespace WebApplication_JokeMachine
             app.UseSession();
 
             // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
+            //if (app.Environment.IsDevelopment())
+            //{
+            //    app.UseSwagger();
+            //    app.UseSwaggerUI();
+            //}
+
+            app.UseSwagger();
+            app.UseSwaggerUI(options =>
             {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
+                options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+                options.RoutePrefix = string.Empty;
+            });
 
             app.UseHttpsRedirection();
 

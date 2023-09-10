@@ -7,7 +7,7 @@ using System.Net;
 
 namespace WebApplication_JokeMachine.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("/")]
     [ApiController]
     public class AuthenticationController : ControllerBase
     {

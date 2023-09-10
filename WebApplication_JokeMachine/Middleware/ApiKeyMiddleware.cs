@@ -25,7 +25,7 @@ namespace WebApplication_JokeMachine.Middleware
             if (context.Session.IsAvailable) { context.Session.SetString("SessionTitle", ""); }
 
             // If the request is targeting the generatekey api, let them pass.
-            if (context.Request.Path.Equals("/api/Authentication/GenerateKey"))
+            if (context.Request.Path.Equals("/GenerateKey"))
             {
                 await _next(context);
                 return;
