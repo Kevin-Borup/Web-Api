@@ -1,4 +1,9 @@
 
+using WebApplication_JokeMachine.DataHandlers;
+using WebApplication_JokeMachine.Interfaces;
+using WebApplication_JokeMachine.Middleware;
+using WebApplication_JokeMachine.Services;
+
 namespace WebApplication_JokeMachine
 {
     public class Program
@@ -13,6 +18,9 @@ namespace WebApplication_JokeMachine
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+
+            builder.Services.AddTransient<IEncryptionService, EncryptorService>();
+            builder.Services.AddSingleton<IDataHandler>(new LocalDataHandler());
 
             builder.Services.AddDistributedMemoryCache();
             builder.Services.AddSession(options =>
@@ -38,6 +46,7 @@ namespace WebApplication_JokeMachine
 
             app.UseAuthorization();
 
+            app.UseMiddleware<ApiKeyMiddleware>();
 
             app.MapControllers();
 

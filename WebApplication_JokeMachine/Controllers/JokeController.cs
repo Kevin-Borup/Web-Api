@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.DataProtection.KeyManagement;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using WebApplication_JokeMachine.DataHandlers;
+using WebApplication_JokeMachine.DTOs;
 using WebApplication_JokeMachine.Extenders;
 using WebApplication_JokeMachine.Models;
 
@@ -20,23 +22,21 @@ namespace WebApplication_JokeMachine.Controllers
         }
 
         [HttpGet]
-        public async Task<Joke> GetJoke([FromQuery] string category = "")
+        public async Task<JokeDTO> GetJoke([FromQuery] string category = "")
         {
-            string lang = Request.Headers.ContentLanguage;
+            string? lang = Request.Headers.ContentLanguage;
+
+            if (lang == null) throw new HttpRequestException("No language specified", null, HttpStatusCode.NotFound);
 
             if (HttpContext.Session.IsAvailable)
             {
-                List<Joke> allJokes;
-                if (string.IsNullOrWhiteSpace(category))
-                {
-                   allJokes = _dataHandler.GetAllJokes(lang);
-                }
-                else
-                {
-                    allJokes = _dataHandler.GetJokesInCategory(lang, category);
-                }
+                string? access = HttpContext.Session.GetString("SessionAccess");
 
-                if (allJokes == null || allJokes.Count == 0) throw new HttpRequestException("No jokes left", null, HttpStatusCode.NotFound);
+                if (access == null) throw new HttpRequestException("Access not certain", null, HttpStatusCode.Unauthorized);
+
+                List<Joke> allJokes = _dataHandler.GetJokes(access, lang, category);
+
+                if (allJokes == null || allJokes.Count == 0) throw new HttpRequestException("No jokes", null, HttpStatusCode.NotFound);
 
                 var usedJokesIndex = HttpContext.Session.GetObjectFromJson<List<int>>("UsedJokesIndex");
                 if (usedJokesIndex == null) usedJokesIndex= new List<int>();
@@ -52,9 +52,10 @@ namespace WebApplication_JokeMachine.Controllers
 
                 HttpContext.Session.SetObjectAsJson("UsedJokesIndex", usedJokesIndex);
 
-                return joke;
+                return new JokeDTO(joke.Content, joke.PunchLine);
             }
 
+            throw new HttpRequestException("No jokes left", null, HttpStatusCode.NotFound);
         }
     }
 }
