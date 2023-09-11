@@ -17,7 +17,7 @@ namespace WebApplication_Dragons
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.ConfigureSwaggerGenWithAuthentication();
             builder.ConfigureAuthentication();
 
             var app = builder.Build();
@@ -26,7 +26,10 @@ namespace WebApplication_Dragons
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
-                app.UseSwaggerUI();
+                app.UseSwaggerUI(options =>
+                {
+                    options.SwaggerEndpoint("V1/swagger.json", "Product WebAPI");
+                });
             }
 
             app.UseHttpsRedirection();
