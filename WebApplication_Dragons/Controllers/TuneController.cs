@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using WebApplication_Dragons.DataHandlers;
+using WebApplication_Dragons.DTOs;
 using WebApplication_Dragons.Models;
 
 namespace WebApplication_Dragons.Controllers
@@ -20,17 +21,21 @@ namespace WebApplication_Dragons.Controllers
 
         [Authorize(Roles = "Listener, Creator")]
         [HttpGet("DragonTunes")]
-        public async Task<IEnumerable<Tune>> GetAllTunes()
+        public async Task<IEnumerable<TuneDTO>> GetAllTunes()
         {
-            return await _dataHandler.GetAllTunes();
+            List<Tune> tunes = await _dataHandler.GetAllTunes();
+            List<TuneDTO> tunesDTO = new List<TuneDTO>();
+
+            tunes.ForEach(a => tunesDTO.Add(new TuneDTO(a.Name, a.Duration));
+
+            return tunesDTO;
         }
 
         [Authorize(Roles = "Creator")]
         [HttpPost("NewDragonTune")]
-        public async Task PostTune([FromQuery] Tune tune)
+        public async Task PostTune([FromQuery] TuneDTO tune)
         {
             if (tune == null) throw new HttpRequestException("No tune parameters", null, HttpStatusCode.BadRequest);
-            if (tune.Index == null) throw new HttpRequestException("No index parameters", null, HttpStatusCode.BadRequest);
             if (tune.Name == null) throw new HttpRequestException("No name parameters", null, HttpStatusCode.BadRequest);
             if (tune.Duration == null) throw new HttpRequestException("No duration parameters", null, HttpStatusCode.BadRequest);
 
