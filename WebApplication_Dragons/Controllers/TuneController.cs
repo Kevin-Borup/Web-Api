@@ -23,10 +23,10 @@ namespace WebApplication_Dragons.Controllers
         [HttpGet("DragonTunes")]
         public async Task<IEnumerable<TuneDTO>> GetAllTunes()
         {
-            var tunes = await _dataHandler.GetAllTunes();
+            List<Tune> tunes = (await _dataHandler.GetAllTunes()).ToList();
             List<TuneDTO> tunesDTO = new List<TuneDTO>();
 
-            tunes.ToList().ForEach(tune => tunesDTO.Add(new TuneDTO(tune)));
+            tunes.ForEach(a => tunesDTO.Add(new TuneDTO(a.Name, a.Duration)));
 
             return tunesDTO;
         }
@@ -39,10 +39,9 @@ namespace WebApplication_Dragons.Controllers
             if (tune.Name == null) throw new HttpRequestException("No name parameters", null, HttpStatusCode.BadRequest);
             if (tune.Duration == null) throw new HttpRequestException("No duration parameters", null, HttpStatusCode.BadRequest);
 
-            int highestIndex = await _dataHandler.HighestTuneIndex();
-            highestIndex++; 
+            int tuneIndex = (await  _dataHandler.HighestTuneIndex()) + 1;
 
-            await _dataHandler.InsertNewTune(new Tune(tune, highestIndex));
+            await _dataHandler.InsertNewTune(new Tune(tuneIndex, tune.Name, tune.Duration));
         }
     }
 }
