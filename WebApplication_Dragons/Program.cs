@@ -31,8 +31,9 @@ namespace WebApplication_Dragons
 
             app.UseHttpsRedirection();
 
-            app.UseAuthorization();
             app.UseAuthentication();
+
+            app.UseAuthorization();
 
             // Add configuration from jwt.json
             builder.Configuration.AddJsonFile("jwt.json", optional: false, reloadOnChange: true).AddEnvironmentVariables();

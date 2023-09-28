@@ -80,7 +80,7 @@ namespace WebApplication_Dragons.Controllers
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.AddMinutes(10),
+                Expires = DateTime.Now.AddMinutes(10),
                 Issuer = issuer,
                 Audience = audience,
                 SigningCredentials = signingCredentials
